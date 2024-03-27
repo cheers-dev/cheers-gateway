@@ -28,11 +28,14 @@ final class User: Model, Content {
     var name: String
     
     // optional values
-    @Field(key: "birth")
+    @OptionalField(key: "birth")
     var birth: Date?
     
-    @Field(key: "avatar")
+    @OptionalField(key: "avatar")
     var avatar: URL?
+    
+    @Timestamp(key: "create_at", on: .create, format: .iso8601)
+    var createAt: Date?
     
     init() {}
     
@@ -44,28 +47,5 @@ final class User: Model, Content {
         self.name = name
         self.birth = birth
         self.avatar = avatar
-    }
-}
-
-
-extension User {
-    struct Create: Content {
-        var account: String
-        var password: String
-        var confirmPassword: String
-        var mail: String
-        var name: String
-        var birth: Date?
-        var avatar: URL?
-    }
-}
-
-extension User.Create: Validatable {
-    static func validations(_ validations: inout Vapor.Validations) {
-        validations.add("account", as: String.self, is: !.empty, required: true)
-        validations.add("mail", as: String.self, is: .email, required: true)
-        validations.add("password", as: String.self, is: .count(8...), required: true)
-        validations.add("birth", as: Date.self, is: .valid, required: false)
-        validations.add("avatar", as: URL.self, is: .valid, required: false)
     }
 }
