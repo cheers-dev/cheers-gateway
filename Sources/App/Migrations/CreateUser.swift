@@ -10,7 +10,7 @@ import Vapor
 
 struct CreateUser: AsyncMigration {
 
-    func prepare(on database: any FluentKit.Database) async throws {
+    func prepare(on database: any Database) async throws {
         do {
             try await database.schema("user")
                 .id()
@@ -24,7 +24,7 @@ struct CreateUser: AsyncMigration {
                 .unique(on: "mail")
                 .create()
         } catch(let err) {
-            throw Abort(.badRequest, reason: err.localizedDescription)
+            throw Abort(.badRequest, reason: "\(err)")
         }
     }
     
