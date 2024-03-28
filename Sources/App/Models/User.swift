@@ -34,7 +34,7 @@ final class User: Model, Content {
     @OptionalField(key: "avatar")
     var avatar: URL?
     
-    @Timestamp(key: "create_at", on: .create, format: .iso8601)
+    @Timestamp(key: "create_at", on: .create)
     var createAt: Date?
     
     init() {}
