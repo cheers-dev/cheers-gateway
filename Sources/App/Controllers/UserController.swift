@@ -11,8 +11,28 @@ import Vapor
 struct UserController: RouteCollection {
     func boot(routes: any Vapor.RoutesBuilder) throws {
         let user = routes.grouped("user")
+        
+        user
+            .grouped(User.authenticator())
+            .post("login", use: login)
             
         user.post("register", use: register)
+    }
+    
+    func login(req: Request) async throws -> String {
+        let user = try req.auth.require(User.self)
+        
+        var token = try await AccessToken
+            .query(on: req.db)
+            .filter(\.$user.$id == user.id!)
+            .first()
+        
+        if token == nil {
+            token = try user.generateAccessToken()
+        }
+        
+        try await token!.save(on: req.db)
+        return token!.token
     }
     
     func register(req: Request) async throws -> Response {
