@@ -39,13 +39,23 @@ final class User: Model, Content {
     
     init() {}
     
-    init(id: UUID? = nil, account: String, hashedPassword: String, mail: String, name: String, birth: Date? = nil, avatar: URL? = nil) {
+    init(id: UUID? = nil, account: String, hashedPassword: String, mail: String, name: String, birthString: String, avatar: URL? = nil) throws {
         self.id = id
         self.account = account
         self.hashedPassword = hashedPassword
         self.mail = mail
         self.name = name
-        self.birth = birth
         self.avatar = avatar
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = .gmt
+        
+        guard let birth = dateFormatter.date(from: birthString)
+        else {
+            throw Abort(.badRequest, reason: "Invalid date format.")
+        }
+        
+        self.birth = birth
     }
 }

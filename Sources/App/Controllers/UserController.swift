@@ -16,7 +16,7 @@ struct UserController: RouteCollection {
             .grouped(User.authenticator())
             .post("login", use: login)
             
-        user.post("register", use: register)
+        user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
     }
     
     func login(req: Request) async throws -> String {
@@ -39,11 +39,6 @@ struct UserController: RouteCollection {
         try User.Create.validate(content: req)
         let create = try req.content.decode(User.Create.self)
         
-        guard create.password == create.confirmPassword
-        else {
-            throw Abort(.badRequest, reason: "Password not matched.")
-        }
-        
         let id = UUID()
         
         var avatar: String?
@@ -60,14 +55,19 @@ struct UserController: RouteCollection {
         }
         
         do {
+            guard let baseURL = Environment.get("BASE_URL")
+            else {
+                throw Abort(.internalServerError, reason: "Base URL not found.")
+            }
+            
             let user = try User(
                 id: id,
                 account: create.account,
                 hashedPassword: Bcrypt.hash(create.password),
                 mail: create.mail,
                 name: create.name,
-                birth: create.birth,
-                avatar: avatar != nil ? URL(string: "http://localhost:8080/\(avatar!)") : nil
+                birthString: create.birth,
+                avatar: avatar != nil ? URL(string: baseURL + avatar!) : nil
             )
             try await user.save(on: req.db)
         } catch(let err) {

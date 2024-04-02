@@ -12,10 +12,9 @@ extension User {
     struct Create: Content {
         var account: String
         var password: String
-        var confirmPassword: String
         var mail: String
         var name: String
-        var birth: Date?
+        var birth: String
         var avatar: File?
     }
 }
