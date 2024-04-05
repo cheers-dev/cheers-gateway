@@ -15,7 +15,6 @@ extension User {
         var mail: String
         var name: String
         var birth: String
-        var avatar: File?
     }
 }
 
