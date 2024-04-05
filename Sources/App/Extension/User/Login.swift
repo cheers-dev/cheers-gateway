@@ -9,11 +9,12 @@ import Fluent
 import Vapor
 
 extension User: ModelAuthenticatable {
+    
     static let usernameKey = \User.$account
-    static let passwordHashKey = \User.$hashedPassword
+    static let passwordHashKey = \User.$password
     
     func verify(password: String) throws -> Bool {
-        try Bcrypt.verify(password, created: self.hashedPassword)
+        try Bcrypt.verify(password, created: self.password)
     }
     
     func generateAccessToken() throws -> AccessToken {

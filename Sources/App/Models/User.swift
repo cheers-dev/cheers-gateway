@@ -18,8 +18,8 @@ final class User: Model, Content {
     @Field(key: "account")
     var account: String
     
-    @Field(key: "hashed_password")
-    var hashedPassword: String
+    @Field(key: "password")
+    var password: String
     
     @Field(key: "mail")
     var mail: String
@@ -42,7 +42,7 @@ final class User: Model, Content {
     init(id: UUID? = nil, account: String, hashedPassword: String, mail: String, name: String, birthString: String, avatar: URL? = nil) throws {
         self.id = id
         self.account = account
-        self.hashedPassword = hashedPassword
+        self.password = hashedPassword
         self.mail = mail
         self.name = name
         self.avatar = avatar
