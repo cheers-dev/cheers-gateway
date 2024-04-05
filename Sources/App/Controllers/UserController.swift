@@ -14,7 +14,7 @@ struct UserController: RouteCollection {
         
         user
             .grouped(User.authenticator())
-            .post("login", use: login)
+            .on(.GET, "login", body: .collect(maxSize: "500kb"), use: login)
             
         user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
     }
@@ -41,37 +41,18 @@ struct UserController: RouteCollection {
         
         let id = UUID()
         
-        var avatar: String?
-        if let avatarFile = create.avatar {
-            let imageType = avatarFile.filename.split(separator: ".")
-            avatar = "avatar/\(id.uuidString.lowercased()).\(imageType.last ?? "")"
-            do {
-                req.logger.log(level: .critical, "Writing image into \(avatar!)")
-                try await req.fileio.writeFile(avatarFile.data, at: "\(req.application.directory.publicDirectory)\(avatar!)")
-            } catch(let err) {
-                req.logger.error("\(err)")
-                throw Abort(.badRequest, reason: "\(err)")
-            }
-        }
-        
         do {
-            guard let baseURL = Environment.get("BASE_URL")
-            else {
-                throw Abort(.internalServerError, reason: "Base URL not found.")
-            }
-            
             let user = try User(
                 id: id,
                 account: create.account,
                 hashedPassword: Bcrypt.hash(create.password),
                 mail: create.mail,
                 name: create.name,
-                birthString: create.birth,
-                avatar: avatar != nil ? URL(string: baseURL + avatar!) : nil
+                birthString: create.birth
             )
             try await user.save(on: req.db)
         } catch(let err) {
-            req.logger.error("\(err)")
+            req.logger.error("\(String(reflecting: err))")
             throw Abort(.badRequest, reason: "\(err)")
         }
         
