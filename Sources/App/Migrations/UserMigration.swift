@@ -1,5 +1,5 @@
 //
-//  CreateUser.swift
+//  UserMigration.swift
 //
 //
 //  Created by Dong on 2024/3/27.
@@ -8,7 +8,7 @@
 import Fluent
 import Vapor
 
-struct CreateUser: AsyncMigration {
+struct UserMigration: AsyncMigration {
 
     func prepare(on database: any Database) async throws {
         do {

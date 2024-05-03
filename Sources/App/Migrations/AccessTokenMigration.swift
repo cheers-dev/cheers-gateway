@@ -1,5 +1,5 @@
 //
-//  CreateAccessToken.swift
+//  AccessTokenMigration.swift
 //
 //
 //  Created by Dong on 2024/3/28.
@@ -8,7 +8,7 @@
 import Fluent
 import Vapor
 
-struct CreateAccessToken: AsyncMigration {
+struct AccessTokenMigration: AsyncMigration {
     
     func prepare(on database: any Database) async throws {
         do {
