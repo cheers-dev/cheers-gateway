@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "cheers-auth",
+    name: "cheers-gateway",
     platforms: [
        .macOS(.v13)
     ],
