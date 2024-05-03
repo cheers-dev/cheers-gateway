@@ -40,6 +40,7 @@ struct UserController: RouteCollection {
         let create = try req.content.decode(User.Create.self)
         
         let id = UUID()
+        let token: AccessToken
         
         do {
             let user = try User(
@@ -51,11 +52,13 @@ struct UserController: RouteCollection {
                 birthString: create.birth
             )
             try await user.save(on: req.db)
+            token = try user.generateAccessToken()
+            try await token.save(on: req.db)
         } catch(let err) {
             req.logger.error("\(String(reflecting: err))")
             throw Abort(.badRequest, reason: "\(err)")
         }
         
-        return Response(status: .created, body: "Account create successfully.")
+        return Response(status: .created, body: .init(string: token.token))
     }
 }
