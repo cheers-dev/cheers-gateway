@@ -37,6 +37,9 @@ final class User: Model, Content {
     @Timestamp(key: "create_at", on: .create)
     var createAt: Date?
     
+    @Siblings(through: ChatroomParticipant.self, from: \.$user, to: \.$chatroom)
+    var chatrooms: [Chatroom]
+    
     init() {}
     
     init(id: UUID? = nil, account: String, hashedPassword: String, mail: String, name: String, birthString: String, avatar: URL? = nil) throws {
