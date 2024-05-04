@@ -23,7 +23,7 @@ struct UserController: RouteCollection {
         let user = try req.auth.require(User.self)
         
         var token = try await AccessToken
-            .query(on: req.db)
+            .query(on: req.db(.psql))
             .filter(\.$user.$id == user.id!)
             .first()
         
@@ -31,7 +31,7 @@ struct UserController: RouteCollection {
             token = try user.generateAccessToken()
         }
         
-        try await token!.save(on: req.db)
+        try await token!.save(on: req.db(.psql))
         return token!.token
     }
     
@@ -51,9 +51,9 @@ struct UserController: RouteCollection {
                 name: create.name,
                 birthString: create.birth
             )
-            try await user.save(on: req.db)
+            try await user.save(on: req.db(.psql))
             token = try user.generateAccessToken()
-            try await token.save(on: req.db)
+            try await token.save(on: req.db(.psql))
         } catch(let err) {
             req.logger.error("\(String(reflecting: err))")
             throw Abort(.badRequest, reason: "\(err)")
