@@ -1,6 +1,7 @@
 import NIOSSL
 import Fluent
 import FluentPostgresDriver
+import FluentMongoDriver
 import Vapor
 
 // configures your application
@@ -9,16 +10,26 @@ public func configure(_ app: Application) async throws {
      app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 
     app.databases.use(DatabaseConfigurationFactory.postgres(configuration: .init(
-        hostname: Environment.get("DATABASE_HOST") ?? "localhost",
-        port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
-        username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
-        password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
-        database: Environment.get("DATABASE_NAME") ?? "vapor_database",
+        hostname: Environment.get("POSTGRES_HOST") ?? "localhost",
+        port: Environment.get("POSTGRES_PORT").flatMap(Int.init(_:)) ?? SQLPostgresConfiguration.ianaPortNumber,
+        username: Environment.get("POSTGRES_USERNAME") ?? "vapor_username",
+        password: Environment.get("POSTGRES_PASSWORD") ?? "vapor_password",
+        database: Environment.get("POSTGRES_NAME") ?? "vapor_database",
         tls: .prefer(try .init(configuration: .clientDefault)))
     ), as: .psql)
-
-    app.migrations.add(CreateUser())
-    app.migrations.add(CreateAccessToken())
+    
+    try app.databases.use(
+        .mongo(connectionString: Environment.get("MONGO_CONNECTION_STRING") ?? ""),
+        as: .mongo
+    )
+    
+    
+    // postgresql
+    app.migrations.add(UserMigration(), to: .psql)
+    app.migrations.add(AccessTokenMigration(), to: .psql)
+    app.migrations.add(ChatroomMigration(), to: .psql)
+    app.migrations.add(ChatroomParticipantMigration(), to: .psql)
+    
     // register routes
     try routes(app)
 }
