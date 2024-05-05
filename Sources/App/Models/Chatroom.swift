@@ -28,7 +28,7 @@ final class Chatroom: Model, Content {
     
     init() {}
     
-    init(id: UUID, name: String, avatar: String? = nil) {
+    init(id: UUID? = nil, name: String, avatar: String? = nil) {
         self.id = id
         self.name = name
         self.avatar = avatar
