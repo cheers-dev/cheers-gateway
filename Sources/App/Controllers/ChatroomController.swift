@@ -16,7 +16,11 @@ struct ChatroomController {
         
         chatroom
             .grouped(AccessToken.authenticator())
-            .on(.GET, "chatrooms", ":chatroomId", use: getChatroomList)
+            .on(.GET, "chatrooms", use: getChatroomList)
+        
+        chatroom
+            .grouped(AccessToken.authenticator())
+            .on(.POST, "createChatroom", use: createChatroom)
     }
     
     func getChatroomList(req: Request) async throws -> [ChatroomInfo] {
@@ -53,4 +57,26 @@ struct ChatroomController {
             return lhsTime > rhsTime
         }
     }
+    
+    func createChatroom(req: Request) async throws -> Chatroom {
+        try Chatroom.Create.validate(content: req)
+        let data = try req.content.decode(Chatroom.Create.self)
+        
+        let chatroom = Chatroom(name: data.name)
+        try await chatroom.save(on: req.db(.psql))
+        
+        for userId in data.userIds {
+            guard let user = try await User
+                      .query(on: req.db)
+                      .filter(\.$id == userId)
+                      .first()
+            else { throw Abort(.badRequest, reason: "User not found.")}
+            
+            let participant = try ChatroomParticipant(user: user, chatroom: chatroom)
+            try await participant.save(on: req.db(.psql))
+        }
+        
+        return chatroom
+    }
+    
 }
