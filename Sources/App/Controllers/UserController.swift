@@ -39,12 +39,10 @@ struct UserController: RouteCollection {
         try User.Create.validate(content: req)
         let create = try req.content.decode(User.Create.self)
         
-        let id = UUID()
         let token: AccessToken
         
         do {
             let user = try User(
-                id: id,
                 account: create.account,
                 hashedPassword: Bcrypt.hash(create.password),
                 mail: create.mail,
