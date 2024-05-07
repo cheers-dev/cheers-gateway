@@ -21,6 +21,10 @@ struct ChatroomController {
         chatroom
             .grouped(AccessToken.authenticator())
             .on(.POST, "createChatroom", use: createChatroom)
+        
+        chatroom
+            .grouped(AccessToken.authenticator())
+            .on(.POST, "invite", use: inviteUser)
     }
     
     func getChatroomList(req: Request) async throws -> [ChatroomInfo] {
@@ -79,4 +83,39 @@ struct ChatroomController {
         return chatroom
     }
     
+    func inviteUser(req: Request) async throws -> Response {
+        let inviter = try req.auth.require(User.self)
+        
+        try Chatroom.Invite.validate(content: req)
+        let data = try req.content.decode(Chatroom.Invite.self)
+        
+        guard let chatroom = try await Chatroom
+            .query(on: req.db(.psql))
+            .filter(\.$id == data.chatroomId)
+            .first()
+        else { return Response(status: .forbidden) }
+        
+        let inviterInChatroom = try await ChatroomParticipant
+            .query(on: req.db(.psql))
+            .group(.and) { group in
+                group
+                    .filter(\.$user.$id == inviter.id!)
+                    .filter(\.$chatroom.$id == chatroom.id!)
+            }
+            .first()
+        
+        guard inviterInChatroom != nil
+        else { return Response(status: .nonAuthoritativeInformation) }
+        
+        guard let user = try await User
+            .query(on: req.db(.psql))
+            .filter(\.$id == data.userId)
+            .first()
+        else { return Response(status: .forbidden) }
+        
+        let participant = try ChatroomParticipant(user: user, chatroom: chatroom)
+        try await participant.save(on: req.db(.psql))
+
+        return Response(status: .accepted)
+    }
 }
