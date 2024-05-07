@@ -29,6 +29,10 @@ struct ChatroomController {
         chatroom
             .grouped(AccessToken.authenticator())
             .on(.DELETE, "leave", ":chatroomId", use: leaveChatroom)
+        
+        chatroom
+            .grouped(AccessToken.authenticator())
+            .on(.GET, "messages", ":chatroomId", use: getMessages)
     }
     
     func getChatroomList(req: Request) async throws -> [ChatroomInfo] {
@@ -144,5 +148,43 @@ struct ChatroomController {
             .delete()
         
         return Response(status: .ok)
+    }
+    
+    func getMessages(req: Request) async throws -> Response {
+        let user = try req.auth.require(User.self)
+        
+        guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
+        else { throw Abort(.badRequest) }
+        
+        let page = Int(req.query["page"] ?? 1)
+        
+        guard let chatroom = try await Chatroom
+            .query(on: req.db(.psql))
+            .filter(\.$id == chatroomId)
+            .first()
+        else { throw Abort(.badRequest) }
+        
+        let userIsInChatroom = try await ChatroomParticipant
+            .query(on: req.db(.psql))
+            .group { group in
+                group.filter(\.$user.$id == user.id!)
+                group.filter(\.$chatroom.$id == chatroom.id!)
+            }
+            .first()
+        guard let userIsInChatroom = userIsInChatroom
+        else { throw Abort(.forbidden) }
+        
+        let messages = try await Message
+            .query(on: req.db(.mongo))
+            .filter(\.$chatroomId == chatroom.id!)
+            .sort(\.$createAt, .descending)
+            .paginate(PageRequest(page: page, per: 30))
+            .items
+        let messagesJson = try JSONEncoder().encode(messages)
+
+        guard let jsonData = String(data: messagesJson, encoding: .utf8)
+        else { throw Abort(.internalServerError) }
+        
+        return Response(status: .ok, body: .init(string: jsonData))
     }
 }
