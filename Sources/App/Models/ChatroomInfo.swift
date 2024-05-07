@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  ChatroomInfo.swift
+//
 //
 //  Created by Dong on 2024/5/4.
 //
