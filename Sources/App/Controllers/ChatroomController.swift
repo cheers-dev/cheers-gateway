@@ -25,6 +25,10 @@ struct ChatroomController {
         chatroom
             .grouped(AccessToken.authenticator())
             .on(.POST, "invite", use: inviteUser)
+        
+        chatroom
+            .grouped(AccessToken.authenticator())
+            .on(.DELETE, "leave", ":chatroomId", use: leaveChatroom)
     }
     
     func getChatroomList(req: Request) async throws -> [ChatroomInfo] {
@@ -117,5 +121,28 @@ struct ChatroomController {
         try await participant.save(on: req.db(.psql))
 
         return Response(status: .accepted)
+    }
+    
+    func leaveChatroom(req: Request) async throws -> Response {
+        let user = try req.auth.require(User.self)
+        
+        guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
+        else { throw Abort(.badRequest) }
+        
+        guard let chatroom = try await Chatroom
+            .query(on: req.db(.psql))
+            .filter(\.$id == chatroomId)
+            .first()
+        else { throw Abort(.badRequest) }
+        
+        try await ChatroomParticipant
+            .query(on: req.db(.psql))
+            .group { group in
+                group.filter(\.$user.$id == user.id!)
+                group.filter(\.$chatroom.$id == chatroom.id!)
+            }
+            .delete()
+        
+        return Response(status: .ok)
     }
 }
