@@ -18,7 +18,7 @@ final class Chatroom: Model, Content {
     var name: String
     
     @Field(key: "avatar")
-    var avatar: String?
+    var avatar: URL?
     
     @Timestamp(key: "create_at", on: .create)
     var createAt: Date?
@@ -28,7 +28,7 @@ final class Chatroom: Model, Content {
     
     init() {}
     
-    init(id: UUID? = nil, name: String, avatar: String? = nil) {
+    init(id: UUID? = nil, name: String, avatar: URL? = nil) {
         self.id = id
         self.name = name
         self.avatar = avatar

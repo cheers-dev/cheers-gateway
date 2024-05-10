@@ -15,7 +15,7 @@ struct ChatroomMigration: AsyncMigration {
             try await database.schema(Chatroom.schema)
                 .id()
                 .field("name", .string, .required)
-                .field("avatar", .string, .required)
+                .field("avatar", .string)
                 .field("create_at", .datetime)
                 .create()
         } catch(let err) {
