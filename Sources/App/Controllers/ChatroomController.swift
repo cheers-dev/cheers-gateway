@@ -10,7 +10,7 @@ import Vapor
 
 
 
-struct ChatroomController {
+struct ChatroomController: RouteCollection {
     func boot(routes: any Vapor.RoutesBuilder) throws {
         let chatroom = routes.grouped("chat")
         
@@ -45,14 +45,15 @@ struct ChatroomController {
         
         var chatroomInfos: [ChatroomInfo] = []
         for userInChatroom in userInChatrooms {
-            let lastMessage = try await Message
+            let chatroom = try await userInChatroom.$chatroom.get(on: req.db(.psql))
+            let lastMessage = try? await Message
                 .query(on: req.db(.mongo))
                 .filter(\.$userId == user.id!)
                 .sort(\.$createAt, .descending)
                 .first()
             
             chatroomInfos.append(ChatroomInfo(
-                chatroom: userInChatroom.chatroom,
+                chatroom: chatroom,
                 lastMessage: lastMessage
             ))
         }
