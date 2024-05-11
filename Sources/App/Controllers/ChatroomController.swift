@@ -8,8 +8,6 @@
 import Fluent
 import Vapor
 
-
-
 struct ChatroomController: RouteCollection {
     func boot(routes: any Vapor.RoutesBuilder) throws {
         let chatroom = routes.grouped("chat")
@@ -97,24 +95,12 @@ struct ChatroomController: RouteCollection {
         
         try Chatroom.Invite.validate(content: req)
         let data = try req.content.decode(Chatroom.Invite.self)
-        
-        guard let chatroom = try await Chatroom
-            .query(on: req.db(.psql))
-            .filter(\.$id == data.chatroomId)
-            .first()
-        else { return Response(status: .forbidden) }
-        
-        let inviterInChatroom = try await ChatroomParticipant
-            .query(on: req.db(.psql))
-            .group(.and) { group in
-                group
-                    .filter(\.$user.$id == inviter.id!)
-                    .filter(\.$chatroom.$id == chatroom.id!)
-            }
-            .first()
-        
-        guard inviterInChatroom != nil
-        else { return Response(status: .nonAuthoritativeInformation) }
+                
+        let chatroomParticipant = try await UserInChatroom.validation(
+            req: req,
+            user: inviter,
+            in: data.chatroomId
+        )
         
         guard let user = try await User
             .query(on: req.db(.psql))
@@ -122,7 +108,10 @@ struct ChatroomController: RouteCollection {
             .first()
         else { return Response(status: .forbidden) }
         
-        let participant = try ChatroomParticipant(user: user, chatroom: chatroom)
+        let participant = try await ChatroomParticipant(
+            user: user,
+            chatroom: chatroomParticipant.$chatroom.get(on: req.db(.psql))
+        )
         try await participant.save(on: req.db(.psql))
 
         return Response(status: .accepted)
@@ -133,20 +122,13 @@ struct ChatroomController: RouteCollection {
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
         else { throw Abort(.badRequest) }
-        
-        guard let chatroom = try await Chatroom
-            .query(on: req.db(.psql))
-            .filter(\.$id == chatroomId)
-            .first()
-        else { throw Abort(.badRequest) }
-        
-        try await ChatroomParticipant
-            .query(on: req.db(.psql))
-            .group { group in
-                group.filter(\.$user.$id == user.id!)
-                group.filter(\.$chatroom.$id == chatroom.id!)
-            }
-            .delete()
+
+        let chatroomParticipant = try await UserInChatroom.validation(
+            req: req,
+            user: user,
+            in: chatroomId
+        )
+        try await chatroomParticipant.delete(on: req.db(.psql))
         
         return Response(status: .ok)
     }
@@ -159,25 +141,15 @@ struct ChatroomController: RouteCollection {
         
         let page = Int(req.query["page"] ?? 1)
         
-        guard let chatroom = try await Chatroom
-            .query(on: req.db(.psql))
-            .filter(\.$id == chatroomId)
-            .first()
-        else { throw Abort(.badRequest) }
-        
-        let userIsInChatroom = try await ChatroomParticipant
-            .query(on: req.db(.psql))
-            .group { group in
-                group.filter(\.$user.$id == user.id!)
-                group.filter(\.$chatroom.$id == chatroom.id!)
-            }
-            .first()
-        guard let userIsInChatroom = userIsInChatroom
-        else { throw Abort(.forbidden) }
+        let chatroomParticipant = try await UserInChatroom.validation(
+            req: req,
+            user: user,
+            in: chatroomId
+        )
         
         let messages = try await Message
             .query(on: req.db(.mongo))
-            .filter(\.$chatroomId == chatroom.id!)
+            .filter(\.$chatroomId == chatroomParticipant.$chatroom.id)
             .sort(\.$createAt, .descending)
             .paginate(PageRequest(page: page, per: 30))
             .items
