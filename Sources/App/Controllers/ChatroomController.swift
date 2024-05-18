@@ -36,7 +36,7 @@ struct ChatroomController: RouteCollection {
     func getChatroomList(req: Request) async throws -> [ChatroomInfo] {
         let user = try req.auth.require(User.self)
         
-        var userInChatrooms = try await ChatroomParticipant
+        let userInChatrooms = try await ChatroomParticipant
             .query(on: req.db(.psql))
             .filter(\.$user.$id == user.id!)
             .all()
