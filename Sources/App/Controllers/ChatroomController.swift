@@ -6,6 +6,7 @@
 //
 
 import Fluent
+import FluentMongoDriver
 import Vapor
 
 struct ChatroomController: RouteCollection {
@@ -46,8 +47,8 @@ struct ChatroomController: RouteCollection {
             let chatroom = try await userInChatroom.$chatroom.get(on: req.db(.psql))
             let lastMessage = try? await Message
                 .query(on: req.db(.mongo))
-                .filter(\.$userId == user.id!)
-                .sort(\.$createAt, .descending)
+                .filter(\.$chatroomId == chatroom.id!)
+                .sort(\.$createdAt, .descending)
                 .first()
             
             chatroomInfos.append(ChatroomInfo(
@@ -58,11 +59,11 @@ struct ChatroomController: RouteCollection {
         
         return chatroomInfos.sorted {
             guard let lhsMessage = $0.lastMessage,
-                  let lhsTime = lhsMessage.createAt
+                  let lhsTime = lhsMessage.createdAt
             else { return false }
             
             guard let rhsMessage = $1.lastMessage,
-                  let rhsTime = rhsMessage.createAt
+                  let rhsTime = rhsMessage.createdAt
             else { return false }
             
             return lhsTime > rhsTime
@@ -133,7 +134,7 @@ struct ChatroomController: RouteCollection {
         return Response(status: .ok)
     }
     
-    func getMessages(req: Request) async throws -> Response {
+    func getMessages(req: Request) async throws -> [Message] {
         let user = try req.auth.require(User.self)
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
@@ -150,14 +151,10 @@ struct ChatroomController: RouteCollection {
         let messages = try await Message
             .query(on: req.db(.mongo))
             .filter(\.$chatroomId == chatroomParticipant.$chatroom.id)
-            .sort(\.$createAt, .descending)
+            .sort(\.$createdAt, .descending)
             .paginate(PageRequest(page: page, per: 30))
             .items
-        let messagesJson = try JSONEncoder().encode(messages)
-
-        guard let jsonData = String(data: messagesJson, encoding: .utf8)
-        else { throw Abort(.internalServerError) }
         
-        return Response(status: .ok, body: .init(string: jsonData))
+        return messages
     }
 }
