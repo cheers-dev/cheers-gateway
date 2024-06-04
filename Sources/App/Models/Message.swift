@@ -6,8 +6,10 @@
 //
 
 import Fluent
+import MongoKitten
+import Vapor
 
-final class Message: Model {
+final class Message: Model, Content {
     static let schema = "message"
     
     @ID(key: .id)
@@ -19,18 +21,19 @@ final class Message: Model {
     @Field(key: "chatroomId")
     var chatroomId: UUID
     	
-    @Field(key: "message")
-    var message: String
+    @Field(key: "content")
+    var content: String
     
-    @Timestamp(key: "create_at", on: .create)
-    var createAt: Date?
+    @Field(key: "createdAt")
+    var createdAt: Date?
     
     init() {}
     
-    init(id: UUID, userId: UUID, chatroomId: UUID, message: String) {
+    init(id: UUID? = nil, userId: UUID, chatroomId: UUID, content: String, createdAt: Date) {
         self.id = id
         self.userId = userId
         self.chatroomId = chatroomId
-        self.message = message
+        self.content = content
+        self.createdAt = createdAt
     }
 }
