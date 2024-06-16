@@ -6,6 +6,7 @@
 //
 
 import Fluent
+import Foundation
 import Vapor
 
 struct UserController: RouteCollection {
@@ -19,7 +20,7 @@ struct UserController: RouteCollection {
         user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
     }
     
-    func login(req: Request) async throws -> String {
+    func login(req: Request) async throws -> User.LoginResponse {
         let user = try req.auth.require(User.self)
         
         var token = try await AccessToken
@@ -32,7 +33,7 @@ struct UserController: RouteCollection {
         }
         
         try await token!.save(on: req.db(.psql))
-        return token!.token
+        return User.LoginResponse(accessToken: token!.token, userId: user.id!)
     }
     
     func register(req: Request) async throws -> Response {
@@ -40,15 +41,18 @@ struct UserController: RouteCollection {
         let create = try req.content.decode(User.Create.self)
         
         let token: AccessToken
+        let userId = UUID()
         
         do {
             let user = try User(
+                id: userId,
                 account: create.account,
                 hashedPassword: Bcrypt.hash(create.password),
                 mail: create.mail,
                 name: create.name,
                 birthString: create.birth
             )
+            
             try await user.save(on: req.db(.psql))
             token = try user.generateAccessToken()
             try await token.save(on: req.db(.psql))
@@ -57,6 +61,10 @@ struct UserController: RouteCollection {
             throw Abort(.badRequest, reason: "\(err)")
         }
         
-        return Response(status: .created, body: .init(string: token.token))
+        let loginResponse = User.LoginResponse(accessToken: token.token, userId: userId)
+        guard let loginResponseData = try? JSONEncoder().encode(loginResponse)
+        else { throw Abort(.internalServerError) }
+        
+        return Response(status: .created, body: .init(data: loginResponseData))
     }
 }
