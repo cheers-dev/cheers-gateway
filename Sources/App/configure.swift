@@ -30,6 +30,9 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(ChatroomMigration(), to: .psql)
     app.migrations.add(ChatroomParticipantMigration(), to: .psql)
     
+    // mongo
+    app.migrations.add(MessageMigration(), to: .mongo)
+    
     // register routes
     try routes(app)
 }

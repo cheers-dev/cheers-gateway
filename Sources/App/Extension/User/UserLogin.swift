@@ -24,3 +24,12 @@ extension User: ModelAuthenticatable {
         )
     }
 }
+
+extension User {
+    
+    struct LoginResponse: Content, Codable {
+        
+        let accessToken: String
+        let userId: UUID
+    }
+}
