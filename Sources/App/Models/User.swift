@@ -52,7 +52,7 @@ final class User: Model, Content {
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = .init(identifier: "Asia/Taipei")
+        dateFormatter.timeZone = .init(abbreviation: "CST")
         
         guard let birth = dateFormatter.date(from: birthString)
         else {
