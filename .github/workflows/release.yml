@@ -9,12 +9,14 @@ on:
       - "LICENSE"
       - "Public/"
 
+permissions: write-all
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Next version
         id: next_version
         uses: sortlist/release-version-action@main
