@@ -7,9 +7,9 @@ on:
     paths-ignore:
       - "README.md"
       - "LICENSE"
-      - "Public/"
-      - ".github/"
-      - "Tests/"
+      - "Public/*"
+      - ".github/*"
+      - "Tests/*"
       - ".gitignore"
 
 permissions: write-all
