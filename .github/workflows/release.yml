@@ -1,13 +1,10 @@
 name: release
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
-    paths-ignore:
-      - "README.md"
-      - "LICENSE"
-      - "Public/"
 
 permissions: write-all
 
@@ -30,14 +27,16 @@ jobs:
           prefix: "v"
 
       - name: Show version
-        run: echo "${{ steps.next_version.outputs.version }}"
+        run: |
+          echo ${{ steps.get_next_version.outputs.version }}
+          echo ${{ steps.get_next_version.outputs.hasNextVersion }}
 
       - name: Create Tag
         id: create_tag
         uses: jaywcjlove/create-tag-action@main
-        if: steps.next_version.outputs.version
+        if: steps.get_next_version.outputs.version
         with:
-          version: ${{ steps.next_version.outputs.version }}
+          version: ${{ steps.get_next_version.outputs.version }}
 
       - name: Generate Changelog
         id: changelog
