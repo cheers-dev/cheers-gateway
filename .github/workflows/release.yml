@@ -17,11 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Next version
-        id: next_version
-        uses: sortlist/release-version-action@main
+      - name: Get next version
+        id: get_next_version
+        uses: thenativeweb/get-next-version@main
         with:
-          prefix: v
+          prefix: 'v'
 
       - name: Show version
         run: echo "${{ steps.next_version.outputs.version }}"
