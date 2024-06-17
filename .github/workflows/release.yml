@@ -14,13 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Next version
         id: next_version
         uses: sortlist/release-version-action@main
         with:
           prefix: v
-          prerelease: true
-          prerelease-prefix: rc.
 
       - name: Show version
         run: echo "${{ steps.next_version.outputs.version }}"
