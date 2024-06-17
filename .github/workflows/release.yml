@@ -10,6 +10,48 @@ on:
       - "Public/"
 
 jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Next version
+        id: next_version
+        uses: sortlist/release-version-action@main
+        with:
+          prefix: v
+          prerelease: true
+          prerelease-prefix: rc.
+
+      - name: Show version
+        run: echo "${{ steps.next_version.outputs.version }}"
+
+      - name: Create Tag
+        id: create_tag
+        uses: jaywcjlove/create-tag-action@main
+        if: steps.next_version.outputs.version
+        with:
+          version: ${{ steps.next_version.outputs.version }}
+
+      - name: Generate Changelog
+        id: changelog
+        uses: jaywcjlove/changelog-generator@v1.6.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          head-ref: ${{ steps.create_tag.outputs.version }}
+          filter-author: (dependabot\[bot\]|Renovate Bot)
+          filter: '([R|r]elease[d]\s+[v|V]\d(\.\d+){0,2})|Prettified|Merge branch'
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        if: steps.create_tag.outputs.successful
+        with:
+          name: ${{ steps.create_tag.outputs.version }}
+          tag: ${{ steps.create_tag.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            ${{ steps.changelog.outputs.compareurl }}
+            ${{ steps.changelog.outputs.changelog }}
+
   deploy:
     runs-on: ubuntu-latest
     steps:
