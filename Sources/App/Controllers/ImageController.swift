@@ -13,12 +13,7 @@ struct ImageController: RouteCollection {
         
         imageRoutes
             .grouped(AccessToken.authenticator())
-            .on(
-                .POST,
-                "upload", ":path",
-                body: .collect(maxSize: "1mb"),
-                use: uploadImage
-            )
+            .on(.POST, "upload", ":path", body: .collect(maxSize: "1mb"), use: uploadImage)
     }
     
     func uploadImage(req: Request) async throws -> Response {
