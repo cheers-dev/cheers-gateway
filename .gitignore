@@ -11,3 +11,6 @@ db.sqlite
 ! .env.example
 .vscode
 Public/avatar
+Public/chat
+Public/restaurant
+Public/system
