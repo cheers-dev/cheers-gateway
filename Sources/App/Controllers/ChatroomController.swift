@@ -74,7 +74,7 @@ struct ChatroomController: RouteCollection {
         try Chatroom.Create.validate(content: req)
         let data = try req.content.decode(Chatroom.Create.self)
         
-        let chatroom = Chatroom(name: data.name)
+        let chatroom = Chatroom(name: data.name, avatar: data.avatar)
         try await chatroom.save(on: req.db(.psql))
         
         for userId in data.userIds {

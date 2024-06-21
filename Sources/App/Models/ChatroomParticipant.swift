@@ -6,6 +6,7 @@
 //
 
 import Fluent
+import Vapor
 
 final class ChatroomParticipant: Model {
     static let schema = "chatroom_participant"
