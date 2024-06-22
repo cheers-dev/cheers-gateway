@@ -8,7 +8,7 @@
 import Fluent
 import Vapor
 
-final class AccessToken: Model, Content {
+final class AccessToken: Model, Content, @unchecked Sendable {
     static let schema = "access_token"
     
     @ID(key: .id)

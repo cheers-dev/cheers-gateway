@@ -8,7 +8,7 @@
 import Fluent
 import Vapor
 
-final class ChatroomParticipant: Model {
+final class ChatroomParticipant: Model, @unchecked Sendable {
     static let schema = "chatroom_participant"
     
     @ID(key: .id)

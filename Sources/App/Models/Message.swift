@@ -9,7 +9,7 @@ import Fluent
 import MongoKitten
 import Vapor
 
-final class Message: Model, Content {
+final class Message: Model, Content, @unchecked Sendable {
     static let schema = "message"
     
     @ID(key: .id)
