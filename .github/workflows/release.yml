@@ -12,6 +12,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          fetch-tags: true
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Get next version
