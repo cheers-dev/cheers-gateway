@@ -1,36 +1,39 @@
 name: release
-
-on: pull_request
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 permissions: write-all
 
 jobs:
-  release:
+  build:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Get next version
-        id: get_next_version
-        uses: thenativeweb/get-next-version@main
+    steps:
+      - uses: actions/checkout@v4
         with:
-          prefix: "v"
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: "0"
+          fetch-tags: true
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.69.0
+        id: tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          PRERELEASE: false
+          DEFAULT_BUMP: patch
+          MAJOR_STRING_TOKEN: "feat!:"
+          MINOR_STRING_TOKEN: "feat:"
+          PATCH_STRING_TOKEN: "fix:"
 
       - name: Show version
-        run: |
-          echo ${{ steps.get_next_version.outputs.version }}
-          echo ${{ steps.get_next_version.outputs.hasNextVersion }}
-
-      - name: Create Tag
-        id: create_tag
-        uses: jaywcjlove/create-tag-action@main
-        if: steps.get_next_version.outputs.version
-        with:
-          version: ${{ steps.get_next_version.outputs.version }}
+        run: echo ${{ steps.tag.outputs.new_tag }}
 
       - name: Generate Changelog
         id: changelog
