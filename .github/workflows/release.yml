@@ -40,16 +40,16 @@ jobs:
         uses: jaywcjlove/changelog-generator@v1.6.4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          head-ref: ${{ steps.create_tag.outputs.version }}
+          head-ref: ${{ steps.tag.outputs.new_tag }}
           filter-author: (dependabot\[bot\]|Renovate Bot)
           filter: '([R|r]elease[d]\s+[v|V]\d(\.\d+){0,2})|Prettified|Merge branch'
 
       - name: Create Release
         uses: ncipollo/release-action@v1
-        if: steps.create_tag.outputs.successful
+        if: steps.tag.outputs.new_tag
         with:
-          name: ${{ steps.create_tag.outputs.version }}
-          tag: ${{ steps.create_tag.outputs.version }}
+          name: ${{ steps.tag.outputs.new_tag }}
+          tag: ${{ steps.tag.outputs.new_tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             ${{ steps.changelog.outputs.compareurl }}
