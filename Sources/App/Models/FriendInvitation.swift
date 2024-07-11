@@ -14,10 +14,10 @@ final class FriendInvitation: Model, Content, @unchecked Sendable {
     @ID(key: .id)
     var id: UUID?
     
-    @Parent(key: "requester_id")
+    @Parent(key: "requester")
     var requestor: User
     
-    @Parent(key: "addressee_id")
+    @Parent(key: "addressee")
     var addressee: User
     
     @Enum(key: "status")
@@ -36,10 +36,10 @@ final class FriendInvitation: Model, Content, @unchecked Sendable {
         requestor: User,
         addressee: User,
         status: FriendInvitation.Status = .pending
-    ) {
+    ) throws {
         self.id = id
-        self.requestor = requestor
-        self.addressee = addressee
+        self.$requestor.id = try requestor.requireID()
+        self.$addressee.id = try addressee.requireID()
         self.status = status
     }
 }
