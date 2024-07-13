@@ -19,7 +19,7 @@ struct FriendController: RouteCollection {
         
         friend
             .grouped(AccessToken.authenticator())
-            .on(.PATCH, "accept", use: acceptFriendInvitation)
+            .on(.PATCH, "accept", use: acceptInvitation)
     }
 
     func sendInvite(req: Request) async throws -> Response {
@@ -67,7 +67,7 @@ struct FriendController: RouteCollection {
         return .init(status: .ok)
     }
     
-    func acceptFriendInvitation(_ req: Request) async throws -> Response {
+    func acceptInvitation(_ req: Request) async throws -> Response {
         let (_, invitation) = try await validateUserInInvitation(req)
         
         invitation.status = .accepted
@@ -81,6 +81,8 @@ struct FriendController: RouteCollection {
         
         return .init(status: .ok)
     }
+    
+    
 }
 
 
