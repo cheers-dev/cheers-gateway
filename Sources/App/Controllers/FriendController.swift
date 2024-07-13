@@ -24,6 +24,10 @@ struct FriendController: RouteCollection {
         friend
             .grouped(AccessToken.authenticator())
             .on(.PATCH, "reject", use: rejectInvitation)
+        
+        friend
+            .grouped(AccessToken.authenticator())
+            .on(.GET, "getInvites", use: getPendingInvitations)
     }
 
     func sendInvite(req: Request) async throws -> Response {
@@ -93,6 +97,17 @@ struct FriendController: RouteCollection {
         try await invitation.update(on: req.db(.psql))
         
         return .init(status: .ok)
+    }
+    
+    func getPendingInvitations(_ req: Request) async throws -> [FriendInvitation] {
+        let user = try req.auth.require(User.self)
+        
+        let invitation = try await FriendInvitation.query(on: req.db(.psql))
+            .filter(\.$addressee.$id == user.requireID())
+            .filter(\.$status == .pending)
+            .all()
+        
+        return invitation
     }
 }
 
