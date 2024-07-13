@@ -30,6 +30,8 @@ struct FriendController: RouteCollection {
             .on(.GET, "getInvites", use: getPendingInvitations)
     }
 
+    // MARK: - Invitation
+    
     func sendInvite(req: Request) async throws -> Response {
         let user = try req.auth.require(User.self)
         let data = try req.content.decode(Friend.Create.self)
@@ -109,6 +111,8 @@ struct FriendController: RouteCollection {
         
         return invitation
     }
+    
+    // MARK: - Friend
 }
 
 
