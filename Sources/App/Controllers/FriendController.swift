@@ -16,6 +16,10 @@ struct FriendController: RouteCollection {
         friend
             .grouped(AccessToken.authenticator())
             .on(.POST, "sendInvite", use: sendInvite)
+        
+        friend
+            .grouped(AccessToken.authenticator())
+            .on(.PATCH, "accept", use: acceptFriendInvitation)
     }
 
     func sendInvite(req: Request) async throws -> Response {
@@ -61,5 +65,39 @@ struct FriendController: RouteCollection {
         try await createInvitation.save(on: req.db(.psql))
         
         return .init(status: .ok)
+    }
+    
+    func acceptFriendInvitation(_ req: Request) async throws -> Response {
+        let (_, invitation) = try await validateUserInInvitation(req)
+        
+        invitation.status = .accepted
+        try await invitation.update(on: req.db(.psql))
+        
+        let friend = try await Friend(
+            uid1: invitation.$requestor.get(on: req.db(.psql)),
+            uid2: invitation.$addressee.get(on: req.db(.psql))
+        )
+        try await friend.save(on: req.db(.psql))
+        
+        return .init(status: .ok)
+    }
+}
+
+
+extension FriendController {
+    func validateUserInInvitation(_ req: Request) async throws -> (User, FriendInvitation) {
+        let user = try req.auth.require(User.self)
+        
+        guard let requestId = try? req.query.get<String>(String.self, at: "id"),
+              let requestUuid = UUID(uuidString: requestId)
+        else { throw Abort(.badRequest) }
+        
+        guard let invitation = try await FriendInvitation.query(on: req.db(.psql))
+            .filter(\.$id == requestUuid)
+            .filter(\.$addressee.$id == user.id!)
+            .first()
+        else { throw Abort(.forbidden) }
+        
+        return (user, invitation)
     }
 }
