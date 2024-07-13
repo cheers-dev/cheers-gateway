@@ -106,9 +106,10 @@ extension FriendController {
         else { throw Abort(.badRequest) }
         
         guard let invitation = try await FriendInvitation.query(on: req.db(.psql))
-            .filter(\.$id == requestUuid)
-            .filter(\.$addressee.$id == user.id!)
-            .first()
+                    .filter(\.$id == requestUuid)
+                    .filter(\.$addressee.$id == user.id!)
+                    .first(),
+              invitation.status != .pending
         else { throw Abort(.forbidden) }
         
         return invitation
