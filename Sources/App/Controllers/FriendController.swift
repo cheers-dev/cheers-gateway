@@ -20,6 +20,10 @@ struct FriendController: RouteCollection {
         friend
             .grouped(AccessToken.authenticator())
             .on(.PATCH, "accept", use: acceptInvitation)
+        
+        friend
+            .grouped(AccessToken.authenticator())
+            .on(.PATCH, "reject", use: rejectInvitation)
     }
 
     func sendInvite(req: Request) async throws -> Response {
@@ -78,6 +82,15 @@ struct FriendController: RouteCollection {
             uid2: invitation.$addressee.get(on: req.db(.psql))
         )
         try await friend.save(on: req.db(.psql))
+        
+        return .init(status: .ok)
+    }
+    
+    func rejectInvitation(_ req: Request) async throws -> Response {
+        let invitation = try await validateUserInInvitation(req)
+        
+        invitation.status = .rejected
+        try await invitation.update(on: req.db(.psql))
         
         return .init(status: .ok)
     }
