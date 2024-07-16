@@ -28,6 +28,10 @@ struct FriendController: RouteCollection {
         friend
             .grouped(AccessToken.authenticator())
             .on(.GET, "getInvites", use: getPendingInvitations)
+        
+        friend
+            .grouped(AccessToken.authenticator())
+            .on(.GET, "getFriends", use: getFriendList)
     }
 
     // MARK: - Invitation
@@ -113,6 +117,19 @@ struct FriendController: RouteCollection {
     }
     
     // MARK: - Friend
+    
+    func getFriendList(_ req: Request) async throws -> [Friend] {
+        let user = try req.auth.require(User.self)
+        
+        let friendList = try await Friend.query(on: req.db(.psql))
+            .group(.or) { group in
+                group.filter(\.$uid1.$id == user.id!)
+                group.filter(\.$uid2.$id == user.id!)
+            }
+            .all()
+        
+        return friendList
+    }
 }
 
 
