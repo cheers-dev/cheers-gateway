@@ -105,20 +105,32 @@ struct FriendController: RouteCollection {
         return .init(status: .ok)
     }
     
-    func getPendingInvitations(_ req: Request) async throws -> [FriendInvitation] {
+    func getPendingInvitations(_ req: Request) async throws -> [FriendInvitation.Get] {
         let user = try req.auth.require(User.self)
         
-        let invitation = try await FriendInvitation.query(on: req.db(.psql))
+        let invitations = try await FriendInvitation.query(on: req.db(.psql))
             .filter(\.$addressee.$id == user.requireID())
             .filter(\.$status == .pending)
+            .with(\.$requestor)
             .all()
         
-        return invitation
+        return try invitations.map { invitation in
+            try FriendInvitation.Get(
+                id: invitation.requireID(),
+                requestor: User.Get(
+                    account: invitation.requestor.account,
+                    mail: invitation.requestor.mail,
+                    name: invitation.requestor.name,
+                    avatar: invitation.requestor.avatar
+                ),
+                status: invitation.status
+            )
+        }
     }
     
     // MARK: - Friend
     
-    func getFriendList(_ req: Request) async throws -> [Friend] {
+    func getFriendList(_ req: Request) async throws -> [User.Get] {
         let user = try req.auth.require(User.self)
         
         let friendList = try await Friend.query(on: req.db(.psql))
@@ -126,11 +138,26 @@ struct FriendController: RouteCollection {
                 group.filter(\.$uid1.$id == user.id!)
                 group.filter(\.$uid2.$id == user.id!)
             }
+            .with(\.$uid1)
+            .with(\.$uid2)
             .all()
         
-        return friendList
-    }
+        var friends = friendList.map { friendData in
+            var friend: User
+            if friendData.uid1.id == user.id {
+                friend = friendData.uid2
+            } else {
+                friend = friendData.uid1
+            }
+            
+            return User.Get(
+                account: friend.account,
+                mail: friend.mail,
+                name: friend.name,
+                avatar: friend.avatar
+            )
+        }
         
-        return invitation
+        return friends
     }
 }
