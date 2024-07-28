@@ -82,7 +82,7 @@ struct FriendController: RouteCollection {
     }
     
     func acceptInvitation(_ req: Request) async throws -> Response {
-        let invitation = try await validateUserInInvitation(req)
+        let invitation = try await UserInInvitation.validation(req)
         
         invitation.status = .accepted
         try await invitation.update(on: req.db(.psql))
@@ -97,7 +97,7 @@ struct FriendController: RouteCollection {
     }
     
     func rejectInvitation(_ req: Request) async throws -> Response {
-        let invitation = try await validateUserInInvitation(req)
+        let invitation = try await UserInInvitation.validation(req)
         
         invitation.status = .rejected
         try await invitation.update(on: req.db(.psql))
@@ -130,23 +130,6 @@ struct FriendController: RouteCollection {
         
         return friendList
     }
-}
-
-
-extension FriendController {
-    func validateUserInInvitation(_ req: Request) async throws -> FriendInvitation {
-        let user = try req.auth.require(User.self)
-        
-        guard let requestId = try? req.query.get<String>(String.self, at: "id"),
-              let requestUuid = UUID(uuidString: requestId)
-        else { throw Abort(.badRequest) }
-        
-        guard let invitation = try await FriendInvitation.query(on: req.db(.psql))
-                    .filter(\.$id == requestUuid)
-                    .filter(\.$addressee.$id == user.id!)
-                    .first(),
-              invitation.status != .pending
-        else { throw Abort(.forbidden) }
         
         return invitation
     }
