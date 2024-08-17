@@ -10,9 +10,10 @@ import Vapor
 
 extension User {
     struct Get: Content {
-        var account: String
-        var mail: String?
-        var name: String
+        let id: UUID
+        let account: String
+        let mail: String?
+        let name: String
         var birth: Date?
         var avatar: URL?
     }
