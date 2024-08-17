@@ -38,7 +38,7 @@ struct FriendController: RouteCollection {
     
     func sendInvite(req: Request) async throws -> Response {
         let user = try req.auth.require(User.self)
-        let data = try req.content.decode(Friend.Create.self)
+        let data = try req.content.decode(FriendInvitation.Create.self)
         
         guard let addressee = try await User.query(on: req.db(.psql))
             .filter(\.$id == data.addressee)
@@ -118,6 +118,7 @@ struct FriendController: RouteCollection {
             try FriendInvitation.Get(
                 id: invitation.requireID(),
                 requestor: User.Get(
+                    id: invitation.requestor.requireID(),
                     account: invitation.requestor.account,
                     mail: invitation.requestor.mail,
                     name: invitation.requestor.name,
@@ -142,7 +143,7 @@ struct FriendController: RouteCollection {
             .with(\.$uid2)
             .all()
         
-        var friends = friendList.map { friendData in
+        var friends = try friendList.map { friendData in
             var friend: User
             if friendData.uid1.id == user.id {
                 friend = friendData.uid2
@@ -150,7 +151,8 @@ struct FriendController: RouteCollection {
                 friend = friendData.uid1
             }
             
-            return User.Get(
+            return try User.Get(
+                id: friend.requireID(),
                 account: friend.account,
                 mail: friend.mail,
                 name: friend.name,
