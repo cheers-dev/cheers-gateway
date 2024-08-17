@@ -8,14 +8,14 @@
 import Fluent
 import Vapor
 
-extension Friend {
+extension FriendInvitation {
     struct Create: Content {
         var addressee: UUID
     }
 }
 
 
-extension Friend.Create: Validatable {
+extension FriendInvitation.Create: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("addressee", as: UUID.self, required: true)
     }
