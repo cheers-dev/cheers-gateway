@@ -11,7 +11,6 @@ import Vapor
 final class User: Model, Content, @unchecked Sendable {
     static let schema = "user"
     
-    // required values
     @ID(key: .id)
     var id: UUID?
     
@@ -37,8 +36,24 @@ final class User: Model, Content, @unchecked Sendable {
     @Timestamp(key: "create_at", on: .create)
     var createAt: Date?
     
+    @Children(for: \.$requestor)
+    var requestedInvitations: [FriendInvitation]
+    
+    @Children(for: \.$addressee)
+    var receivedInvitations: [FriendInvitation]
+    
     @Siblings(through: ChatroomParticipant.self, from: \.$user, to: \.$chatroom)
     var chatrooms: [Chatroom]
+    
+    @Siblings(through: Friend.self, from: \.$uid1, to: \.$uid2)
+    private var friendList1: [User]
+    
+    @Siblings(through: Friend.self, from: \.$uid2, to: \.$uid1)
+    private var friendList2: [User]
+    
+    var friends: [User] {
+        return friendList1 + friendList2
+    }
     
     init() {}
     

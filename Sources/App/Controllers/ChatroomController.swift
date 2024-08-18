@@ -1,6 +1,6 @@
 //
 //  ChatroomController.swift
-//  
+//
 //
 //  Created by Dong on 2024/5/3.
 //
@@ -79,9 +79,9 @@ struct ChatroomController: RouteCollection {
         
         for userId in data.userIds {
             guard let user = try await User
-                      .query(on: req.db)
-                      .filter(\.$id == userId)
-                      .first()
+                .query(on: req.db)
+                .filter(\.$id == userId)
+                .first()
             else { throw Abort(.badRequest, reason: "User not found.")}
             
             let participant = try ChatroomParticipant(user: user, chatroom: chatroom)
@@ -96,7 +96,13 @@ struct ChatroomController: RouteCollection {
         
         try Chatroom.Invite.validate(content: req)
         let data = try req.content.decode(Chatroom.Invite.self)
-                
+        
+        guard try await FriendValidation.validation(req: req, user: inviter, with: data.userId)
+        else {
+            print("friend not found")
+            throw Abort(.forbidden)
+        }
+        
         let chatroomParticipant = try await UserInChatroom.validation(
             req: req,
             user: inviter,
@@ -114,7 +120,7 @@ struct ChatroomController: RouteCollection {
             chatroom: chatroomParticipant.$chatroom.get(on: req.db(.psql))
         )
         try await participant.save(on: req.db(.psql))
-
+        
         return Response(status: .accepted)
     }
     
@@ -123,7 +129,7 @@ struct ChatroomController: RouteCollection {
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
         else { throw Abort(.badRequest) }
-
+        
         let chatroomParticipant = try await UserInChatroom.validation(
             req: req,
             user: user,
