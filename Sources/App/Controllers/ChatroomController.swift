@@ -9,6 +9,8 @@ import Fluent
 import FluentMongoDriver
 import Vapor
 
+// MARK: - ChatroomController
+
 struct ChatroomController: RouteCollection {
     func boot(routes: any Vapor.RoutesBuilder) throws {
         let chatroom = routes
@@ -21,13 +23,15 @@ struct ChatroomController: RouteCollection {
         chatroom.on(.DELETE, "leave", ":chatroomId", use: leaveChatroom)
         chatroom.on(.GET, "messages", ":chatroomId", use: getMessages)
     }
-    
-    func getChatroomList(req: Request) async throws -> [Chatroom.Info] {
+}
+
+extension ChatroomController {
+    private func getChatroomList(req: Request) async throws -> [Chatroom.Info] {
         let user = try req.auth.require(User.self)
         return try await ChatroomParticipant.getAllUserChatroomInfos(req, userId: user.requireID())
     }
     
-    func createChatroom(req: Request) async throws -> Chatroom {
+    private func createChatroom(req: Request) async throws -> Chatroom {
         try Chatroom.Create.validate(content: req)
         let data = try req.content.decode(Chatroom.Create.self)
         let chatroom = try await Chatroom.createChatroom(req, name: data.name)
@@ -40,7 +44,7 @@ struct ChatroomController: RouteCollection {
         return chatroom
     }
     
-    func inviteUser(req: Request) async throws -> Response {
+    private func inviteUser(req: Request) async throws -> Response {
         let inviter = try req.auth.require(User.self)
         
         try Chatroom.Invite.validate(content: req)
@@ -53,12 +57,6 @@ struct ChatroomController: RouteCollection {
             .verifyUserInChatroom(req, user: inviter, in: data.chatroomId)
         else { throw Abort(.forbidden, reason: "Permission denied.") }
         
-        guard let user = try await User
-            .query(on: req.db(.psql))
-            .filter(\.$id == data.userId)
-            .first()
-        else { return Response(status: .forbidden) }
-        
         try await ChatroomParticipant.addUserToChatroom(
             req,
             userID: data.userId,
@@ -68,7 +66,7 @@ struct ChatroomController: RouteCollection {
         return Response(status: .ok)
     }
     
-    func leaveChatroom(req: Request) async throws -> Response {
+    private func leaveChatroom(req: Request) async throws -> Response {
         let user = try req.auth.require(User.self)
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
@@ -79,7 +77,7 @@ struct ChatroomController: RouteCollection {
         return Response(status: .ok)
     }
     
-    func getMessages(req: Request) async throws -> [Message] {
+    private func getMessages(req: Request) async throws -> [Message] {
         let user = try req.auth.require(User.self)
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
