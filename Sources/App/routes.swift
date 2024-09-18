@@ -2,6 +2,7 @@ import Fluent
 import Vapor
 
 func routes(_ app: Application) throws {
+    app.routes.defaultMaxBodySize = "1mb"
     
     app.get { req async in
         "Cheers API working successfully!"

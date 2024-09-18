@@ -1,8 +1,9 @@
 //
 //  Chatroom.swift
-//  
+//  cheers-gateway
 //
-//  Created by Dong on 2024/5/3.
+//  Created by Dong on 5/3/24.
+//  Copyright © 2024 Dongdong867. All rights reserved.
 //
 
 import Fluent

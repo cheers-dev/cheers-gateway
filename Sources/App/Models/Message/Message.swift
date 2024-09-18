@@ -1,8 +1,9 @@
 //
 //  Message.swift
-//  
+//  cheers-gateway
 //
-//  Created by Dong on 2024/5/4.
+//  Created by Dong on 5/4/24.
+//  Copyright © 2024 Dongdong867. All rights reserved.
 //
 
 import Fluent
@@ -20,7 +21,7 @@ final class Message: Model, Content, @unchecked Sendable {
 
     @Field(key: "chatroomId")
     var chatroomId: UUID
-    	
+        
     @Field(key: "content")
     var content: String
     
@@ -37,3 +38,4 @@ final class Message: Model, Content, @unchecked Sendable {
         self.createdAt = createdAt
     }
 }
+

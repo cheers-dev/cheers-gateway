@@ -1,26 +1,29 @@
 //
 //  UserController.swift
-//  
+//  cheers-gateway
 //
-//  Created by Dong on 2024/3/27.
+//  Created by Dong on 3/27/24.
+//  Copyright © 2024 Dongdong867. All rights reserved.
 //
 
 import Fluent
-import Foundation
 import Vapor
+
+// MARK: - UserController
 
 struct UserController: RouteCollection {
     func boot(routes: any Vapor.RoutesBuilder) throws {
         let user = routes.grouped("user")
         
-        user
-            .grouped(User.authenticator())
+        user.grouped(User.authenticator())
             .on(.GET, "login", body: .collect(maxSize: "500kb"), use: login)
             
         user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
     }
-    
-    func login(req: Request) async throws -> User.LoginResponse {
+}
+
+extension UserController {
+    private func login(req: Request) async throws -> User.LoginResponse {
         let user = try req.auth.require(User.self)
         
         var token = try await AccessToken
@@ -36,7 +39,7 @@ struct UserController: RouteCollection {
         return User.LoginResponse(accessToken: token!.token, userId: user.id!)
     }
     
-    func register(req: Request) async throws -> Response {
+    private func register(req: Request) async throws -> Response {
         try User.Create.validate(content: req)
         let create = try req.content.decode(User.Create.self)
         
@@ -56,7 +59,7 @@ struct UserController: RouteCollection {
             try await user.save(on: req.db(.psql))
             token = try user.generateAccessToken()
             try await token.save(on: req.db(.psql))
-        } catch(let err) {
+        } catch let err {
             req.logger.error("\(String(reflecting: err))")
             throw Abort(.badRequest, reason: "\(err)")
         }
