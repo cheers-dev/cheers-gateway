@@ -1,8 +1,9 @@
 //
 //  ChatroomParticipant.swift
-//  
+//  cheers-gateway
 //
-//  Created by Dong on 2024/5/4.
+//  Created by Dong on 5/4/24.
+//  Copyright © 2024 Dongdong867. All rights reserved.
 //
 
 import Fluent
@@ -22,7 +23,7 @@ final class ChatroomParticipant: Model, @unchecked Sendable {
     
     init() {}
     
-    init(id: UUID? = nil, user: User, chatroom: Chatroom) throws {
+    init(id: UUID? = UUID(), user: User, chatroom: Chatroom) throws {
         self.id = id
         self.$user.id = try user.requireID()
         self.$chatroom.id = try chatroom.requireID()

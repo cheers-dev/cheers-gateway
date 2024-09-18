@@ -1,24 +1,29 @@
 //
 //  ImageController.swift
+//  cheers-gateway
 //
-//
-//  Created by Dong on 2024/6/21.
+//  Created by Dong on 6/21/24.
+//  Copyright © 2024 Dongdong867. All rights reserved.
 //
 
 import Vapor
 
+// MARK: - ImageController
+
 struct ImageController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let imageRoutes = routes.grouped("images")
-        
-        imageRoutes
+        let imageRoutes = routes
+            .grouped("images")
             .grouped(AccessToken.authenticator())
-            .on(.POST, "upload", ":path", body: .collect(maxSize: "1mb"), use: uploadImage)
+
+        imageRoutes.on(.POST, "upload", ":path", body: .collect(maxSize: "1mb"), use: uploadImage)
     }
-    
-    func uploadImage(req: Request) async throws -> Response {
+}
+
+extension ImageController {
+    private func uploadImage(req: Request) async throws -> Response {
         let data = try req.content.decode(ImageUpload.self)
-        
+
         guard let baseURL = Environment.get("BASE_URL")
         else { throw Abort(.internalServerError) }
 
@@ -27,11 +32,11 @@ struct ImageController: RouteCollection {
               let imageType = data.image.filename.split(separator: ".").last,
               ["png", "jpeg", "jpg", "gif"].contains(imageType.lowercased())
         else { throw Abort(.badRequest) }
-        
+
         let id = UUID()
         let publicDirectory = req.application.directory.publicDirectory
         let imagePath = "\(uploadPath)/\(id.uuidString.lowercased()).\(imageType)"
-        
+
         do {
             req.logger.log(level: .info, "Uploading image to \(imagePath)")
             try await req.fileio
@@ -43,7 +48,7 @@ struct ImageController: RouteCollection {
             req.logger.error("\(error)")
             throw Abort(.badRequest, reason: "\(error)")
         }
-                
+
         return Response(
             status: .ok,
             body: .init(string: "\(baseURL)\(imagePath)")

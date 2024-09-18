@@ -1,8 +1,9 @@
 //
 //  User.swift
+//  cheers-gateway
 //
-//
-//  Created by Dong on 2024/3/27.
+//  Created by Dong on 3/27/24.
+//  Copyright © 2024 Dongdong867. All rights reserved.
 //
 
 import Fluent
@@ -26,7 +27,6 @@ final class User: Model, Content, @unchecked Sendable {
     @Field(key: "name")
     var name: String
     
-    // optional values
     @OptionalField(key: "birth")
     var birth: Date?
     
