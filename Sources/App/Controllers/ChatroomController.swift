@@ -77,7 +77,7 @@ extension ChatroomController {
         return Response(status: .ok)
     }
     
-    private func getMessages(req: Request) async throws -> [Message] {
+    private func getMessages(req: Request) async throws -> [MessageWithSender] {
         let user = try req.auth.require(User.self)
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
@@ -88,6 +88,27 @@ extension ChatroomController {
         guard try await ChatroomParticipant.verifyUserInChatroom(req, user: user, in: chatroomId)
         else { throw Abort(.forbidden, reason: "User not in chatroom") }
         
-        return try await Message.getMessageByChatroomID(req, chatroomID: chatroomId, page: page)
+        var messages = try await Message.getMessageByChatroomID(req, chatroomID: chatroomId, page: page)
+        
+        var messagesWithSender: [MessageWithSender] = []
+        for message in messages {
+            guard let sender = try await User.find(message.userId, on: req.db(.psql)) else {
+                throw Abort(.notFound, reason: "Sender not found")
+            }
+            
+            let messageWithSender = MessageWithSender(
+                id: message.id!,
+                userId: message.userId,
+                chatroomId: message.chatroomId,
+                content: message.content,
+                createdAt: message.createdAt,
+                name: sender.name
+//                avatar: sender.avatar
+            )
+                    
+            messagesWithSender.append(messageWithSender)
+        }
+        
+        return messagesWithSender
     }
 }
