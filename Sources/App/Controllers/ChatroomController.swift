@@ -22,6 +22,8 @@ struct ChatroomController: RouteCollection {
         chatroom.on(.POST, "invite", use: inviteUser)
         chatroom.on(.DELETE, "leave", ":chatroomId", use: leaveChatroom)
         chatroom.on(.GET, "messages", ":chatroomId", use: getMessages)
+        chatroom.on(.GET, "recommendation", ":chatroomId", use: getRecommendation)
+        chatroom.on(.GET, "recommendationList", use: getRecommendationList)
     }
 }
 
@@ -110,5 +112,33 @@ extension ChatroomController {
         }
         
         return messagesWithSender
+    }
+    
+    private func getRecommendation(req: Request) async throws -> [RestaurantRecommendation]{
+        let user = try req.auth.require(User.self)
+        
+        guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
+        else { throw Abort(.badRequest) }
+        
+        let page = Int(req.query["page"] ?? 1)
+        
+        guard try await ChatroomParticipant.verifyUserInChatroom(req, user: user, in: chatroomId)
+        else { throw Abort(.forbidden, reason: "User not in chatroom") }
+        
+        let recommendation = try await Recommendation
+            .query(on: req.db(.mongo))
+            .filter(\.$chatroomId == chatroomId)
+            .first()
+        
+        guard let recommendations = recommendation?.recommendation else {
+            return []
+        }
+        
+        return recommendations
+    }
+    
+    private func getRecommendationList(req: Request) async throws -> [Recommendation.Info] {
+        let user = try req.auth.require(User.self)
+        return try await ChatroomParticipant.getAllUserRecommendations(req, userId: user.requireID())
     }
 }
