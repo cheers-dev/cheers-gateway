@@ -31,6 +31,7 @@ public func configure(_ app: Application) async throws {
     app.migrations.add(ChatroomParticipantMigration(), to: .psql)
     app.migrations.add(FriendMigration(), to: .psql)
     app.migrations.add(FriendInvitationMigration(), to: .psql)
+    app.migrations.add(UserPreferenceMigration(), to: .psql)
     
     // mongo
     app.migrations.add(MessageMigration(), to: .mongo)
