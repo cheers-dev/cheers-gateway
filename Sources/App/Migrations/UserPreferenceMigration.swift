@@ -6,30 +6,35 @@
 //
 
 import Fluent
+import FluentKit
+import Vapor
 
-struct UserPreferenceMigration: Migration {
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("user_preference")
-            .field("user_id", .uuid, .identifier(auto: false))
-            .field("美式", .int, .required)
-            .field("中式", .int, .required)
-            .field("甜點", .int, .required)
-            .field("日式", .int, .required)
-            .field("越式", .int, .required)
-            .field("義式", .int, .required)
-            .field("韓式", .int, .required)
-            .field("港式", .int, .required)
-            .field("泰式", .int, .required)
-            .field("法式", .int, .required)
-            .field("西式", .int, .required)
-            .field("東南亞", .int, .required)
-            .field("異國料理", .int, .required)
-            .field("酒吧", .int, .required)
-            .create()
+struct UserPreferenceMigration: AsyncMigration {
+    func prepare(on database: any Database) async throws {
+        do {
+            try await database.schema("user_preference")
+                .field("user_id", .uuid, .identifier(auto: false), .references("user", "id"))
+                .field("american", .int, .required)
+                .field("chinese", .int, .required)
+                .field("dessert", .int, .required)
+                .field("japanese", .int, .required)
+                .field("vietnamese", .int, .required)
+                .field("italian", .int, .required)
+                .field("korean", .int, .required)
+                .field("hongkong", .int, .required)
+                .field("thai", .int, .required)
+                .field("french", .int, .required)
+                .field("western", .int, .required)
+                .field("southeastAsian", .int, .required)
+                .field("exotic", .int, .required)
+                .field("bar", .int, .required)
+                .create()
+        } catch {
+            throw Abort(.badRequest, reason: "\(error)")
+        }
     }
 
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("user_preference").delete()
+    func revert(on database: any Database) async throws {
+        try await database.schema("user_preference").delete()
     }
 }
-
