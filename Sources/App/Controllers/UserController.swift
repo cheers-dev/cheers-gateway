@@ -21,7 +21,7 @@ struct UserController: RouteCollection {
         user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
         
         user.grouped(User.authenticator())
-            .on(.POST, "rankings", use: createRanking)
+            .on(.POST, "rankings", use: writeRanking)
     }
 }
 
@@ -74,7 +74,7 @@ extension UserController {
         return Response(status: .created, body: .init(data: loginResponseData))
     }
     
-    private func createRanking(req: Request) async throws -> Response {
+    private func writeRanking(req: Request) async throws -> Response {
         try UserPreference.Payload.validate(content: req)
         
         let user = try req.auth.require(User.self)
