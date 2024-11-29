@@ -17,10 +17,10 @@ struct UserController: RouteCollection {
         
         user.grouped(User.authenticator())
             .on(.GET, "login", body: .collect(maxSize: "500kb"), use: login)
-            
+        
         user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
         
-        user.grouped(User.authenticator())
+        user.grouped(AccessToken.authenticator())
             .on(.POST, "rankings", use: writeRanking)
     }
 }
@@ -75,8 +75,6 @@ extension UserController {
     }
     
     private func writeRanking(req: Request) async throws -> Response {
-        try UserPreference.Payload.validate(content: req)
-        
         let user = try req.auth.require(User.self)
         let payload = try req.content.decode(UserPreference.Payload.self)
         
