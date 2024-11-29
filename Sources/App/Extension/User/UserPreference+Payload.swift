@@ -43,12 +43,3 @@ extension UserPreference {
         self.createOrUpdateModel(preferences: preferences)
     }
 }
-
-// MARK: - UserPreference.Payload + Validatable
-
-extension UserPreference.Payload: Validatable {
-    static func validations(_ validations: inout Validations) {
-        validations.add("food", as: String.self, is: !.empty)
-        validations.add("score", as: String.self, is: !.empty)
-    }
-}
