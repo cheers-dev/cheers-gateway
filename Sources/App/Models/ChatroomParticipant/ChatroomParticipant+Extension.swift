@@ -22,7 +22,6 @@ extension ChatroomParticipant {
 
         var chatroomInfos = [Chatroom.Info]()
         for userChatroom in userChatrooms {
-            try print(userChatroom.requireID())
             let lastMessage = try await Message
                 .query(on: req.db(.mongo))
                 .filter(\.$chatroomId == userChatroom.chatroom.requireID())
