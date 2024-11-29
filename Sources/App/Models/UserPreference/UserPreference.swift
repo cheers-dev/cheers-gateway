@@ -8,22 +8,32 @@
 import Fluent
 import Vapor
 
+// MARK: - RankingPayload
+
 struct RankingPayload: Content {
     let userId: String
     let rankings: [RankingEntry]
 }
+
+// MARK: - RankingEntry
 
 struct RankingEntry: Content {
     let food: String
     let score: Int
 }
 
+// MARK: - UserPreference
+
 final class UserPreference: Model, Content, @unchecked Sendable {
     static let schema = "user_preference"
 
+    enum Category: String, Codable, CaseIterable {
+        case american, chinese, dessert, japanese, vietnamese, italian, korean, hongkong, thai, french, western, southeastAsian, exotic, bar
+    }
+
     @ID(custom: "user_id", generatedBy: .user)
     var id: UUID?
-    
+
     @Field(key: "美式")
     var american: Int
 
@@ -85,4 +95,28 @@ final class UserPreference: Model, Content, @unchecked Sendable {
         self.exotic = rankings.first(where: { $0.food == "異國料理" })?.score ?? 0
         self.bar = rankings.first(where: { $0.food == "酒吧" })?.score ?? 0
     }
+
+    init(userId: UUID, preferences: [UserPreference.Category: Int]) {
+        self.id = userId
+        self.createOrUpdateModel(preferences: preferences)
+    }
+
+    func createOrUpdateModel(preferences: [UserPreference.Category: Int]) {
+        self.american = preferences[.american] ?? 0
+        self.chinese = preferences[.chinese] ?? 0
+        self.dessert = preferences[.dessert] ?? 0
+        self.japanese = preferences[.japanese] ?? 0
+        self.vietnamese = preferences[.vietnamese] ?? 0
+        self.italian = preferences[.italian] ?? 0
+        self.korean = preferences[.korean] ?? 0
+        self.hongkong = preferences[.hongkong] ?? 0
+        self.thai = preferences[.thai] ?? 0
+        self.french = preferences[.french] ?? 0
+        self.western = preferences[.western] ?? 0
+        self.southeastAsian = preferences[.southeastAsian] ?? 0
+        self.exotic = preferences[.exotic] ?? 0
+        self.bar = preferences[.bar] ?? 0
+    }
+    
+    
 }
