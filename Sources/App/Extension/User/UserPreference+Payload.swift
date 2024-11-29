@@ -24,12 +24,20 @@ extension UserPreference {
         _ payload: [Ranking],
         userId: UUID
     ) throws -> UserPreference {
-        var preferences = [UserPreference.Category: Int]()
+        let duplicates = Dictionary(grouping: payload, by: { $0.food })
+            .filter { $1.count > 1 }
+            .keys
+        
+        guard duplicates.isEmpty else {
+            throw Abort(.badRequest, reason: "Duplicate food categories found: \(duplicates)")
+        }
 
+        var preferences = [UserPreference.Category: Int]()
+        
         for preference in payload {
             preferences[preference.food] = preference.score
         }
-
+        
         return UserPreference(userId: userId, preferences: preferences)
     }
 
