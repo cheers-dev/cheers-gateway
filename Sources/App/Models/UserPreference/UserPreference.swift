@@ -8,20 +8,6 @@
 import Fluent
 import Vapor
 
-// MARK: - RankingPayload
-
-struct RankingPayload: Content {
-    let userId: String
-    let rankings: [RankingEntry]
-}
-
-// MARK: - RankingEntry
-
-struct RankingEntry: Content {
-    let food: String
-    let score: Int
-}
-
 // MARK: - UserPreference
 
 final class UserPreference: Model, Content, @unchecked Sendable {
