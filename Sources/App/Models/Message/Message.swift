@@ -38,4 +38,3 @@ final class Message: Model, Content, @unchecked Sendable {
         self.createdAt = createdAt
     }
 }
-

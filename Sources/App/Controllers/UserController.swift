@@ -17,8 +17,11 @@ struct UserController: RouteCollection {
         
         user.grouped(User.authenticator())
             .on(.GET, "login", body: .collect(maxSize: "500kb"), use: login)
-            
+        
         user.on(.POST, "register", body: .collect(maxSize: "1mb"), use: register)
+        
+        user.grouped(AccessToken.authenticator())
+            .on(.POST, "rankings", use: writeRanking)
     }
 }
 
@@ -69,5 +72,29 @@ extension UserController {
         else { throw Abort(.internalServerError) }
         
         return Response(status: .created, body: .init(data: loginResponseData))
+    }
+    
+    private func writeRanking(req: Request) async throws -> Response {
+        let user = try req.auth.require(User.self)
+        let payload = try req.content.decode(UserPreference.Payload.self)
+        
+        let userPreferenceModel = try UserPreference.toUserPreferenceModel(
+            payload.rankings,
+            userId: user.requireID()
+        )
+        
+        guard let existedPreference = try await UserPreference
+            .query(on: req.db(.psql))
+            .filter(\.$id == user.requireID())
+            .first()
+        else {
+            try await userPreferenceModel.save(on: req.db(.psql))
+            return Response(status: .created)
+        }
+        
+        existedPreference.updatingFromPayload(payload: payload.rankings)
+        try await existedPreference.save(on: req.db(.psql))
+        
+        return Response(status: .ok)
     }
 }

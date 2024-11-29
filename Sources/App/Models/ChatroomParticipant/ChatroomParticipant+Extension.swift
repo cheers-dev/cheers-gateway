@@ -24,7 +24,7 @@ extension ChatroomParticipant {
         for userChatroom in userChatrooms {
             let lastMessage = try await Message
                 .query(on: req.db(.mongo))
-                .filter(\.$chatroomId == userChatroom.requireID())
+                .filter(\.$chatroomId == userChatroom.chatroom.requireID())
                 .sort(\.$createdAt, .descending)
                 .first()
 

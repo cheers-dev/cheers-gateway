@@ -33,8 +33,12 @@ extension ChatroomController {
     
     private func createChatroom(req: Request) async throws -> Chatroom {
         try Chatroom.Create.validate(content: req)
+        let user = try req.auth.require(User.self)
         let data = try req.content.decode(Chatroom.Create.self)
+        
         let chatroom = try await Chatroom.createChatroom(req, name: data.name)
+        try await ChatroomParticipant
+            .addUserToChatroom(req, userID: user.requireID(), chatroom: chatroom)
         
         for userId in data.userIds {
             try await ChatroomParticipant
