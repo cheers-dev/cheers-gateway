@@ -34,46 +34,46 @@ final class UserPreference: Model, Content, @unchecked Sendable {
     @ID(custom: "user_id", generatedBy: .user)
     var id: UUID?
 
-    @Field(key: "美式")
+    @Field(key: "american")
     var american: Int
 
-    @Field(key: "中式")
+    @Field(key: "chinese")
     var chinese: Int
 
-    @Field(key: "甜點")
+    @Field(key: "dessert")
     var dessert: Int
 
-    @Field(key: "日式")
+    @Field(key: "japanese")
     var japanese: Int
 
-    @Field(key: "越式")
+    @Field(key: "vietnamese")
     var vietnamese: Int
 
-    @Field(key: "義式")
+    @Field(key: "italian")
     var italian: Int
 
-    @Field(key: "韓式")
+    @Field(key: "korean")
     var korean: Int
 
-    @Field(key: "港式")
+    @Field(key: "hongkong")
     var hongkong: Int
 
-    @Field(key: "泰式")
+    @Field(key: "thai")
     var thai: Int
 
-    @Field(key: "法式")
+    @Field(key: "french")
     var french: Int
 
-    @Field(key: "西式")
+    @Field(key: "western")
     var western: Int
 
-    @Field(key: "東南亞")
+    @Field(key: "southeastAsian")
     var southeastAsian: Int
 
-    @Field(key: "異國料理")
+    @Field(key: "exotic")
     var exotic: Int
 
-    @Field(key: "酒吧")
+    @Field(key: "bar")
     var bar: Int
 
     init() {}
