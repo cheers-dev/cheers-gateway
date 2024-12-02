@@ -81,7 +81,7 @@ extension ChatroomController {
         return Response(status: .ok)
     }
     
-    private func getMessages(req: Request) async throws -> [Message] {
+    private func getMessages(req: Request) async throws -> [Message.Get] {
         let user = try req.auth.require(User.self)
         
         guard let chatroomId = UUID(uuidString: req.parameters.get("chatroomId")!)
@@ -92,6 +92,18 @@ extension ChatroomController {
         guard try await ChatroomParticipant.verifyUserInChatroom(req, user: user, in: chatroomId)
         else { throw Abort(.forbidden, reason: "User not in chatroom") }
         
-        return try await Message.getMessageByChatroomID(req, chatroomID: chatroomId, page: page)
+        let messageRaws = try await Message.getMessageByChatroomID(
+            req,
+            chatroomID: chatroomId,
+            page: page
+        )
+        
+        var messages = [Message.Get]()
+        for messageRaw in messageRaws {
+            let message = try await User.getMessageWithSender(req, message: messageRaw)
+            messages.append(message)
+        }
+        
+        return messages
     }
 }
