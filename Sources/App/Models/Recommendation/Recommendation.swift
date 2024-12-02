@@ -43,5 +43,13 @@ struct RestaurantRecommendation: Content {
     var address: String
     var phone: String
     var price: String
-//    var likes: [Like]
+    var like_status: [LikeStatus]?
+    var likes: Int?
+    var dislikes: Int?
+}
+
+// Like and Dislike structure
+struct LikeStatus: Content {
+    var userId: UUID
+    var like: Bool
 }
