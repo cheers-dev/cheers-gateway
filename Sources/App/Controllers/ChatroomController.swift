@@ -134,7 +134,26 @@ extension ChatroomController {
             return []
         }
         
-        return recommendations
+        // 計算每個推薦餐廳的 likes 和 dislikes
+        return recommendations.map { recommendation in
+                
+            let like_status = recommendation.like_status ?? []
+            let likes = like_status.filter { $0.like }.count
+            let dislikes = like_status.filter { !$0.like }.count
+                
+            return RestaurantRecommendation(
+                opening_time: recommendation.opening_time,
+                name: recommendation.name,
+                category: recommendation.category,
+                rating: recommendation.rating,
+                address: recommendation.address,
+                phone: recommendation.phone,
+                price: recommendation.price,
+                like_status: like_status,
+                likes: likes,
+                dislikes: dislikes
+            )
+        }
     }
     
     private func getRecommendationList(req: Request) async throws -> [Recommendation.Info] {
