@@ -42,6 +42,33 @@ extension ChatroomParticipant {
             return lhs > rhs
         }
     }
+    
+    static func getAllUserRecommendations(
+        _ req: Request,
+        userId: UUID
+    ) async throws -> [Recommendation.Info]{
+        let userChatrooms = try await ChatroomParticipant
+            .query(on: req.db(.psql))
+            .filter(\.$user.$id == userId)
+            .with(\.$chatroom)
+            .all()
+        
+        var recommendationInfos: [Recommendation.Info] = []
+        
+        for userChatroom in userChatrooms {
+            let lastRecommend = try await Recommendation
+                .query(on: req.db(.mongo))
+                .filter(\.$chatroomId == userChatroom.chatroom.requireID())
+                .first()
+
+            recommendationInfos.append(Recommendation.Info(
+                chatroom: userChatroom.chatroom,
+                lastRecommend: lastRecommend?.updatedAt
+            ))
+        }
+        
+        return recommendationInfos
+    }
 
     static func addUserToChatroom(
         _ req: Request,
