@@ -14,6 +14,6 @@ extension Message {
         let id: UUID
         let user: User.Get
         let content: String
-        let createAt: Date
+        let createdAt: Date
     }
 }
