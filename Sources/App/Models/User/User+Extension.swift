@@ -30,7 +30,7 @@ extension User {
                 name: user.name
             ),
             content: message.content,
-            createAt: messageSendTime
+            createdAt: messageSendTime
         )
     }
 }
