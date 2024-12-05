@@ -22,6 +22,9 @@ struct UserController: RouteCollection {
         
         user.grouped(AccessToken.authenticator())
             .on(.POST, "rankings", use: writeRanking)
+        
+        user.grouped(AccessToken.authenticator())
+            .on(.GET, "search", ":userId", use: searchUser)
     }
 }
 
@@ -96,5 +99,19 @@ extension UserController {
         try await existedPreference.save(on: req.db(.psql))
         
         return Response(status: .ok)
+    }
+    
+    private func searchUser(req: Request) async throws -> [User.Get] {
+        let user = try req.auth.require(User.self)
+        let searchTerm = req.parameters.get("userId")!
+        
+        let result = try await User
+            .query(on: req.db(.psql))
+            .filter(\.$account == searchTerm)
+            .all()
+        
+        return result.map {
+            User.Get(id: $0.id!, account: $0.account, mail: $0.mail, name: $0.name)
+        }
     }
 }
